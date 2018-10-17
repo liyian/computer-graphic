@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+
+<head>
+<title>Programming Assignment 2</title>
+<style>
+    body {
+        background-color: #EEEEEE;
+    }
+    label {
+        white-space: pre;
+    }
+</style>
+
+<!-- vertex shader -->
+<script type="x-shader/x-vertex" id="vshader-source">
+      attribute vec3 a_coords;
+    attribute vec3 a_normal;
+
+    uniform mat4 modelview;
+    uniform mat4 projection;
+    
+    uniform mat3 normalMatrix;
+    varying vec4 eyeCoords;
+    varying vec3 N;
+    
+    
+    
+    vec3 color;
+    void main() {
+        vec4 coords = vec4(a_coords,1.0);
+        eyeCoords = modelview* coords;
+        gl_Position = projection * eyeCoords;
+        
+         // vectors for lighting equation
+        N = normalize( normalMatrix*a_normal );
+        
+        
+          
+        
+    }
+
+</script>
+
+<!-- fragment shader -->
+<script type="x-shader/x-fragment" id="fshader-source">
+    precision mediump float;
+    uniform int ambient;
+    uniform int specular;
+    uniform int diffuse;
+    uniform vec4 diffuseColor;
+    uniform vec3 specularColor;
+    uniform float specularExponent;
+    uniform vec4 lightPosition;
+     varying vec4 eyeCoords;
+    varying vec3 N;
+    
+     vec4 v_color=vec4(0,0,0,0);
+    void main() {
+     
+    vec3 L;
+    vec3 R;
+    vec3 V;
+    V = normalize( -eyeCoords.xyz); 
+    if ( lightPosition.w == 0.0 ) {
+            L = normalize( lightPosition.xyz );
+        }
+        else {
+            L = normalize( lightPosition.xyz/lightPosition.w - eyeCoords.xyz );
+        }
+        R = -reflect(L,N);
+        //R= (N*dot(N,L))-L;
+        
+        if ( dot(L,N) <= 0.0 ) {
+            v_color = vec4(0,0,0,1);
+        }
+        
+        else {
+        vec3 color=vec3(0,0,0);
+        if(ambient==1){ color=0.1*diffuseColor.rgb;}
+          if(diffuse==1){
+             color += 0.8*max(dot(L,N),0.0) * diffuseColor.rgb;}  // 0.8 is diffuse intensity of light
+              if (specular==1) {
+                color += 0.4*pow(dot(R,V),specularExponent) * specularColor; // 0.4 is specular intensity of light
+            }
+            v_color = vec4(color,1);
+        }
+        gl_FragColor = v_color;
+        
+    }
+    
+    
+    
+   
+
+</script>
+
+<script src="gl-matrix-min.js"></script>
+<script src="trackball-rotator.js"></script>
+<script src="model.js"></script>
+<script src="pa2.js"></script>
+</head>
+
+
+<body onload="init()">
+Name: Yian Li<br/>
+Student ID:68342735 <br/>
+
+ <p style="width:600px; text-align: left;">
+    <label><b>Object:</b> <select id="object">
+        <option value="0">Torus</option>
+        <option value="1">Cylinder</option>
+        <option value="2">Sphere</option>
+    </select></label><br>
+
+    <label><b>Lighting:  </b></label>
+    <label><b>Ambient</b><input type="checkbox" id="ambient"></label>
+    <label><b>Diffuse</b><input type="checkbox" id="diffuse"></label>
+    <label><b>Specular</b><input type="checkbox" id="specular"></label><br/>
+
+    <label><b>Light Position:</b> <select id="lightpos">
+        <option value="0">[0,0,0,1] (Viewpoint light)</option>
+        <option value="1">[0,0,1,0] (Directional, into screen)</option>
+        <option value="2">[0,1,0,0] (Directional, from above)</option>
+        <option value="3">[0,0,-10,1] (On z-axis, close to object)</option>
+        <option value="4">[2,3,5,0] (Directional from upper right)</option>
+        <option value="5">[-1,0,0,0] (Directional from left )</option>
+        <option value="6">[0,-1,0,0] (Directional from bottom)</option>
+       
+        
+<!--    TODO: Your code goes here.
+        Add two more lights at different directions. One from the bottom and One
+        from the left of the scene. Appropriately change the pa2.js file so that when user
+        selects these new light positions, the scene gets updated. 
+        */ -->
+    </select></label><br>
+
+    <label><b>Specular Exponent:</b> <select id="exponent">
+        <option>0</option>
+        <option>1</option>
+        <option>2</option>
+        <option>5</option>
+        <option>10</option>
+        <option>20</option>
+        <option>50</option>
+        <option>100</option>
+    </select></label>
+</p>
+
+<div id="canvas-holder">
+   <canvas width=700 height=700 id="myGLCanvas" style="background-color:red"></canvas>
+</div>
+
+<p>
+    the specular exponent controls the shiness strenth of the object. The smaller the N, the more shine the object will be.
+</p>
+
+</body>
+
+
+</html>
+

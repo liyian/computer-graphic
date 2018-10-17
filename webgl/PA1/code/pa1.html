@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+<head>
+<title>Programming Assignment 1</title>
+<style>
+    body {
+        background-color: #EEEEEE;
+    }
+    label {
+        white-space: pre;
+    }
+</style>
+
+<!-- vertex shader -->
+<script type="x-shader/x-vertex" id="vshader-source">
+    attribute vec3 a_coords;
+    attribute vec3 a_normal;
+
+    uniform mat4 modelview;
+    uniform mat4 projection;
+
+    uniform mat3 normalMatrix;
+    uniform vec4 lightPosition;
+    uniform vec4 diffuseColor;
+    uniform vec3 specularColor;
+    uniform float specularExponent;
+    varying vec4 v_color;
+    void main() {
+        vec4 coords = vec4(a_coords,1.0);
+        vec4 eyeCoords = modelview* coords;
+        gl_Position = projection * eyeCoords;
+
+        vec3 N, L, R, V;  // vectors for lighting equation
+        N = normalize( normalMatrix*a_normal );
+        if ( lightPosition.w == 0.0 ) {
+            L = normalize( lightPosition.xyz );
+        }
+        else {
+            L = normalize( lightPosition.xyz/lightPosition.w - eyeCoords.xyz );
+        }
+        R = -reflect(L,N);
+        V = normalize( -eyeCoords.xyz);     // (Assumes a perspective projection.)
+        if ( dot(L,N) <= 0.0 ) {
+            v_color = vec4(0,0,0,1);
+        }
+        else {
+            vec3 color = 0.8*dot(L,N) * diffuseColor.rgb;  // 0.8 is diffuse intensity of light
+            if (dot(R,V) > 0.0) {
+                color += 0.4*pow(dot(R,V),specularExponent) * specularColor; // 0.4 is specular intensity of light
+            }
+            v_color = vec4(color, diffuseColor.a);
+        }
+    }
+</script>
+
+<!-- fragment shader -->
+<script type="x-shader/x-fragment" id="fshader-source">
+    precision mediump float;
+    varying vec4 v_color;
+    void main() {
+        gl_FragColor = v_color;
+    }
+</script>
+
+
+<script src="gl-matrix-min.js"></script>
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script src="trackball-rotator.js"></script>
+<script src="models.js"></script>
+<script src = "pa1.js"></script>
+</head>
+
+<body onload="init()">
+Name: Yian Li <br/>
+Student ID:68342735 <br/>
+<label><input type="checkbox" id="my_gl"><b>Use_My_gl</b></label>
+
+<div id="canvas-holder">
+   <canvas width=800 height=800 id="myGLCanvas"</canvas>
+</div>
+
+</body>
+
+</html>
+
